@@ -1,5 +1,7 @@
 package com.tmszw.invoicemanagerv2.auth;
 
+import com.tmszw.invoicemanagerv2.appuser.AppUser;
+import com.tmszw.invoicemanagerv2.appuser.AppUserService;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
@@ -8,12 +10,15 @@ import org.apache.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Optional;
+
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthenticationController {
 
     private final AuthenticationService authenticationService;
+    private final AppUserService appUserService;
 
     @ApiOperation(
             value = "Login endpoint for the user",
@@ -30,10 +35,21 @@ public class AuthenticationController {
             })
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody AuthenticationRequest request) {
-        AuthenticationResponse response = authenticationService.login(request);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.AUTHORIZATION, response.token())
-                .body(response);
+        Optional<AppUser> appUser = appUserService.getUserByEmail(request.email());
+
+        if(appUser.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+            AuthenticationResponse response = authenticationService.login(request);
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.AUTHORIZATION, response.token())
+                    .body(response);
+    }
+
+    @RequestMapping(value = "/confirm-account", method = {RequestMethod.GET, RequestMethod.POST})
+    public ResponseEntity<?> confirmUserAccount(@RequestParam("token") String confirmationToken) {
+        return appUserService.confirmEmail(confirmationToken);
     }
 
 }

@@ -41,7 +41,7 @@ public class JWTUtil {
                 .builder()
                 .setClaims(claims)
                 .setSubject(subject)
-                .setIssuer("http://localhost:8080")
+                .setIssuer("InvoiceManagerApp")
                 .setIssuedAt(Date.from(Instant.now()))
                 .setExpiration(
                         Date.from(
@@ -56,7 +56,7 @@ public class JWTUtil {
         return getClaims(token).getSubject();
     }
 
-    private Claims getClaims(String token) {
+    public Claims getClaims(String token) {
         return Jwts
                 .parserBuilder()
                 .setSigningKey(getSignInKey())

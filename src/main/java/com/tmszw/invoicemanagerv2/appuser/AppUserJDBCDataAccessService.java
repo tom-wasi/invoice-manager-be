@@ -14,10 +14,10 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
     private final AppUserRowMapper rowMapper;
 
     @Override
-    public Optional<AppUser> selectAppUserById(Integer appUserId) {
+    public Optional<AppUser> selectAppUserById(String appUserId) {
 
         var sql = """
-                SELECT id, username, email, password
+                SELECT *
                 FROM app_user
                 WHERE id = ?
                 """;
@@ -33,7 +33,7 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
                 VALUES (?, ?, ?)
                 """;
 
-        int result = jdbcTemplate.update
+        jdbcTemplate.update
                 (
                         sql,
                         appUser.getUsername(),
@@ -41,7 +41,6 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
                         appUser.getPassword()
 
                 );
-        System.out.println("insertAppUser result = " + result);
     }
 
     @Override
@@ -56,7 +55,7 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
     }
 
     @Override
-    public boolean existsAppUserById(Integer id) {
+    public boolean existsAppUserById(String id) {
         var sql = """
                 SELECT count(id)
                 FROM app_user
@@ -67,7 +66,7 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
     }
 
     @Override
-    public void deleteAppUserById(Integer appUserId) {
+    public void deleteAppUserById(String appUserId) {
         var sql = """
                 DELETE
                 FROM app_user
@@ -79,32 +78,29 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
     @Override
     public void updateAppUser(AppUser update) {
 
-        if(update.getUsername() != null) {
+        if (update.getUsername() != null) {
             var sql = """
                     UPDATE app_user
                     SET username = ?
                     WHERE id = ?;
                     """;
-            int result = jdbcTemplate.update(sql, update.getUsername(), update.getId());
-            System.out.println("updateAppUser result = " + result);
+            jdbcTemplate.update(sql, update.getUsername(), update.getId());
         }
-        if(update.getPassword() != null) {
+        if (update.getPassword() != null) {
             var sql = """
                     UPDATE app_user
                     SET password = ?
                     WHERE id = ?;
                     """;
-            int result = jdbcTemplate.update(sql, update.getPassword(), update.getId());
-            System.out.println("updateAppUser result = " + result);
+            jdbcTemplate.update(sql, update.getPassword(), update.getId());
         }
-        if(update.getEmail() != null) {
+        if (update.getEmail() != null) {
             var sql = """
                     UPDATE app_user
                     SET email = ?
                     WHERE id = ?;
                     """;
-            int result = jdbcTemplate.update(sql, update.getEmail(), update.getId());
-            System.out.println("updateAppUser result = " + result);
+            jdbcTemplate.update(sql, update.getEmail(), update.getId());
         }
     }
 
@@ -112,12 +108,17 @@ public class AppUserJDBCDataAccessService implements AppUserDao {
     public Optional<AppUser> selectAppUserByEmail(String email) {
 
         var sql = """
-                SELECT id, username, email, password
+                SELECT *
                 FROM app_user
                 WHERE email = ?;
                 """;
         return jdbcTemplate.query(sql, rowMapper, email)
                 .stream()
                 .findFirst();
+    }
+
+    @Override
+    public AppUser findUserByEmailIgnoreCase(String email) {
+        return null;
     }
 }

@@ -14,21 +14,21 @@ public class CompanyController {
 
     private final CompanyService companyService;
 
-    @GetMapping("/{userId}")
-    public List<Company> getAllCompanies(@PathVariable("userId") Integer userId) {
+    @GetMapping("/get-companies")
+    public List<CompanyDTO> getAllCompanies(@RequestParam String userId) {
         return companyService.getAllUserCompanies(userId);
     }
 
-    @GetMapping("/company/{companyId}")
-    public Company getCompanyById(@PathVariable("companyId") Integer companyId) {
-        return companyService.getCompanyById(companyId);
+    @GetMapping("/get-company")
+    public CompanyDTO getCompanyById(@RequestParam Integer companyId) {
+        return companyService.getCompanyDTOById(companyId);
     }
 
-    @PostMapping("/{userId}/add-company")
+    @PostMapping("/add-company")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<?> addCompany(@PathVariable("userId") Integer userId, @RequestBody Company company) {
+    public ResponseEntity<?> addCompany(@RequestBody CompanyRequest company, @RequestParam String userId) {
         companyService.addCompany(userId, company);
-        return ResponseEntity.ok().build();
+        return ResponseEntity.ok().body("Company created successfully!");
     }
 
     @DeleteMapping("/{companyId}")
@@ -40,7 +40,7 @@ public class CompanyController {
 
     @PutMapping("/{companyId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<?> updateCompany(@PathVariable("companyId") Integer companyId, @RequestBody Company company) {
+    public ResponseEntity<?> updateCompany(@PathVariable("companyId") Integer companyId, @RequestBody CompanyUpdateRequest company) {
         companyService.updateCompany(companyId, company);
         return ResponseEntity.ok().build();
     }

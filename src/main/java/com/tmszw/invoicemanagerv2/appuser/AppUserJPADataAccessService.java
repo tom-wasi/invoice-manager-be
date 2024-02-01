@@ -13,7 +13,7 @@ public class AppUserJPADataAccessService implements AppUserDao {
         this.appUserRepository = appUserRepository;
     }
     @Override
-    public Optional<AppUser> selectAppUserById(Integer id) {
+    public Optional<AppUser> selectAppUserById(String id) {
         return appUserRepository.findById(id);
     }
 
@@ -28,12 +28,12 @@ public class AppUserJPADataAccessService implements AppUserDao {
     }
 
     @Override
-    public boolean existsAppUserById(Integer id) {
+    public boolean existsAppUserById(String id) {
         return appUserRepository.existsAppUserById(id);
     }
 
     @Override
-    public void deleteAppUserById(Integer appUserId) {
+    public void deleteAppUserById(String appUserId) {
         appUserRepository.deleteById(appUserId);
     }
 
@@ -44,6 +44,11 @@ public class AppUserJPADataAccessService implements AppUserDao {
 
     @Override
     public Optional<AppUser> selectAppUserByEmail(String email) {
-        return appUserRepository.findAppUserByEmail(email);
+        return Optional.ofNullable(appUserRepository.findAppUserByEmail(email));
+    }
+
+    @Override
+    public AppUser findUserByEmailIgnoreCase(String email) {
+        return appUserRepository.findAppUserByEmailIgnoreCase(email);
     }
 }

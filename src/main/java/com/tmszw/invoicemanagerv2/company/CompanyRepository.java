@@ -9,9 +9,9 @@ import java.util.List;
 public interface CompanyRepository extends JpaRepository<Company, Integer> {
 
     @Query(value = "SELECT * FROM company WHERE user_id = ?1", nativeQuery = true)
-    List<Company> findAllUserCompanies(Integer userId);
+    List<Company> findAllUserCompanies(String userId);
 
-    @Query(value = "SELECT * FROM company WHERE id = ?1", nativeQuery = true)
+    @Query(value = "SELECT * FROM company WHERE company_id = ?1", nativeQuery = true)
     Company findCompanyById(Integer companyId);
 
 }

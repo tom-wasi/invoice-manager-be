@@ -12,16 +12,16 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("#{'${cors.allowed-origins}'.split(',')}")
+    @Value("http://localhost:3000")
     private List<String> allowedOrigins;
 
-    @Value("#{'${cors.allowed-methods}'.split(',')}")
+    @Value("*")
     private List<String> allowedMethods;
 
-    @Value("#{'${cors.allowed-headers}'.split(',')}")
+    @Value("*")
     private List<String> allowedHeaders;
 
-    @Value("#{'${cors.exposed-headers}'.split(',')}")
+    @Value("*")
     private List<String> expectedHeaders;
 
     @Bean
@@ -33,7 +33,7 @@ public class CorsConfig {
         corsConfiguration.setAllowedHeaders(allowedHeaders);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/api/**", corsConfiguration);
+        source.registerCorsConfiguration("/api/v1/**", corsConfiguration);
         return source;
     }
 }

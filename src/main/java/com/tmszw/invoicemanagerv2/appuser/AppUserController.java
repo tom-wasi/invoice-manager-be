@@ -26,7 +26,7 @@ public class AppUserController {
     private final AppUserService appUserService;
 
     @GetMapping("/{appUserId}")
-    public AppUserDTO getAppUser(@PathVariable("appUserId") Integer appUserId) {
+    public AppUserDTO getAppUser(@PathVariable("appUserId") String appUserId) {
         return appUserService.getAppUser(appUserId);
     }
 
@@ -35,7 +35,7 @@ public class AppUserController {
             @ApiResponse(code = 201, message = "User registered successfully"),
             @ApiResponse(code = 400, message = "Invalid registration request"),
     })
-    @PostMapping
+    @PostMapping("/register-user")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> registerAppUser(@Valid @RequestBody AppUserRegistrationRequest request, BindingResult bindingResult) {
 
@@ -53,15 +53,21 @@ public class AppUserController {
 
     }
 
-    @PutMapping("{appUserId}")
-    public ResponseEntity<?> updateUser(@PathVariable("appUserId") Integer appUserId, AppUserUpdateRequest appUserUpdateRequest) {
+    @PutMapping("/{appUserId}")
+    public ResponseEntity<?> updateUser(@PathVariable("appUserId") String appUserId, AppUserUpdateRequest appUserUpdateRequest) {
         logger.info("Attempting to update user with id: {}", appUserId);
-        appUserService.updateAppUser(appUserId, appUserUpdateRequest);
-        return ResponseEntity.ok().build();
+        try {
+            appUserService.updateAppUser(appUserId, appUserUpdateRequest);
+            logger.info("User update successfull for user with id: {}", appUserId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.info("User update failed.");
+            return ResponseEntity.badRequest().body(e);
+        }
     }
 
-    @DeleteMapping("{appUserId}")
-    public ResponseEntity<?> deleteUser(@PathVariable("appUserId") Integer appUserId) {
+    @DeleteMapping("/{appUserId}")
+    public ResponseEntity<?> deleteUser(@PathVariable("appUserId") String appUserId) {
         logger.info("Deleting user with id {}", appUserId);
         appUserService.deleteAppUser(appUserId);
         return ResponseEntity.ok().build();
