@@ -6,8 +6,6 @@ public record InvoiceDTO(
         Integer id,
         String invoice_file_id,
         String description,
-        Integer companyId,
         boolean isPending,
-        LocalDate localDate
-) {
-}
+        LocalDate uploaded
+) {}

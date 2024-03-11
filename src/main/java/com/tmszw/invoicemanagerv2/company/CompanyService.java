@@ -1,8 +1,9 @@
 package com.tmszw.invoicemanagerv2.company;
 
-import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
 import com.tmszw.invoicemanagerv2.appuser.AppUserService;
-import lombok.RequiredArgsConstructor;
+import com.tmszw.invoicemanagerv2.exception.CompanyNotFoundException;
+import com.tmszw.invoicemanagerv2.exception.UserNotFoundException;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import com.tmszw.invoicemanagerv2.appuser.AppUser;
 
@@ -10,15 +11,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class CompanyService {
 
     private final AppUserService appUserService;
-    private final CompanyRepository companyRepository;
+    private final CompanyDao companyDao;
     private final CompanyDTOMapper companyDTOMapper;
 
+    public CompanyService(
+            @Qualifier("company_jpa") CompanyDao companyDao,
+            AppUserService appUserService,
+            CompanyDTOMapper companyDTOMapper) {
+        this.appUserService = appUserService;
+        this.companyDao = companyDao;
+        this.companyDTOMapper = companyDTOMapper;
+    }
+
     public List<CompanyDTO> getAllUserCompanies(String userId) {
-        List<Company> companies = companyRepository.findAllUserCompanies(userId);
+        List<Company> companies = companyDao.findAllUserCompanies(userId);
         List<CompanyDTO> companyDTOS = new ArrayList<>();
         for (Company c : companies) {
             companyDTOS.add(companyDTOMapper.apply(c));
@@ -27,48 +36,70 @@ public class CompanyService {
     }
 
     public CompanyDTO getCompanyDTOById(Integer companyId) {
-        return companyDTOMapper.apply(companyRepository.findCompanyById(companyId));
+        return companyDTOMapper.apply(companyDao.selectCompanyByCompanyId(companyId).orElseThrow(
+                () -> new CompanyNotFoundException(("company with id: [%s] not found".formatted(companyId)))
+        ));
     }
 
     public Company getCompanyById(Integer companyId) {
-        return companyRepository.findCompanyById(companyId);
+        return companyDao.selectCompanyByCompanyId(companyId).orElseThrow(
+                () -> new CompanyNotFoundException(("company with id: [%s] not found".formatted(companyId)))
+        );
     }
 
-    public void addCompany(String userId, CompanyRequest company) {
+    public void addCompany(String userId,
+                           CompanyRequest company) {
 
-        AppUser appUser = appUserService.getUser(userId);
+        AppUser appUser = appUserService.getAppUser(userId);
         if (appUser == null) {
-            throw new ResourceNotFoundException("user with id [%s] not found".formatted(userId));
+            throw new UserNotFoundException("user with id [%s] not found".formatted(userId));
         }
 
         if (company.companyName() == null || company.companyName().isEmpty()) {
-            throw new IllegalArgumentException("Request body cannot be null nor blank");
+            throw new IllegalArgumentException("company name cannot be null nor blank");
         }
 
         Company newCompany = new Company();
         newCompany.setCompanyName(company.companyName());
         newCompany.setAccountantEmail(company.accountantEmail());
         newCompany.setUser(appUser);
-        companyRepository.save(newCompany);
+        companyDao.insertCompany(newCompany);
     }
 
     public void deleteCompany(Integer companyId) {
-        companyRepository.deleteById(companyId);
+        Company existingCompany = companyDao.selectCompanyByCompanyId(companyId).orElseThrow(
+                () -> new CompanyNotFoundException(("company with id: [%s] not found".formatted(companyId)))
+        );
+
+        if (existingCompany != null) {
+            companyDao.deleteCompanyByCompanyId(companyId);
+        }
     }
 
-    public void updateCompany(Integer companyId, CompanyUpdateRequest companyUpdateRequest) {
-        Company existingCompany = companyRepository.findCompanyById(companyId);
+    public void updateCompany(Integer companyId, CompanyUpdateRequest updateRequest) {
 
-        if (existingCompany == null) {
-            throw new ResourceNotFoundException("company with id [%s] not found".formatted(companyId));
+        Company existingCompany = companyDao.selectCompanyByCompanyId(companyId).orElseThrow(
+                () -> new CompanyNotFoundException(("company with id: [%s] not found".formatted(companyId)))
+        );
+        boolean changesFlag = false;
+
+        if (updateRequest.companyName() != null && !updateRequest.companyName().equals(existingCompany.getCompanyName())) {
+            existingCompany.setCompanyName(updateRequest.companyName());
+            changesFlag = true;
         }
 
-        existingCompany.setCompanyName(companyUpdateRequest.companyName());
-        existingCompany.setAccountantEmail(companyUpdateRequest.accountantEmail());
-        companyRepository.save(existingCompany);
+        if (updateRequest.accountantEmail() != null && !updateRequest.accountantEmail().equals(existingCompany.getAccountantEmail())) {
+            existingCompany.setAccountantEmail(updateRequest.accountantEmail());
+            changesFlag = true;
+        }
+
+        if (!changesFlag) {
+            throw new IllegalArgumentException("No changes to update");
+        }
+        companyDao.updateCompany(existingCompany);
     }
 
     public boolean existsById(Integer companyId) {
-        return companyRepository.existsById(companyId);
+        return companyDao.existsCompanyWithId(companyId);
     }
 }

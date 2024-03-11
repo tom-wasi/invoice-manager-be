@@ -39,7 +39,7 @@ public class SecurityFilterChainConfig {
                 .requestMatchers(
                         HttpMethod.POST,
                         "/api/v1/users/register-user",
-                        "/api/v1/companies/add-company",
+                        "/api/v1/companies/**",
                         "/api/v1/auth/**",
                         "/api/v1/invoices/**"
                 )
@@ -47,14 +47,14 @@ public class SecurityFilterChainConfig {
                 .requestMatchers(
                         HttpMethod.GET,
                         "/ping",
-                        "/api/v1/**"
+                        "/api/v1/**",
+                        "/actuator/*"
                 )
-                .permitAll()
-                .requestMatchers(HttpMethod.GET, "/actuator/**")
                 .permitAll()
                 .requestMatchers(
                         HttpMethod.PUT,
-                        "/api/v1/**"
+                        "/api/v1/**",
+                        "/api/v1/companies/**"
                 )
                 .permitAll()
                 .requestMatchers(

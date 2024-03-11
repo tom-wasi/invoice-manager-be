@@ -1,6 +1,6 @@
 package com.tmszw.invoicemanagerv2.appuser;
 
-import com.amazonaws.services.secretsmanager.model.ResourceNotFoundException;
+import com.tmszw.invoicemanagerv2.exception.UserNotFoundException;
 import com.tmszw.invoicemanagerv2.mail.MailService;
 import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationToken;
 import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationTokenRepository;
@@ -27,7 +27,7 @@ public class AppUserService {
     @Value("${app.base-url}")
     private String url;
 
-    public AppUserService(@Qualifier("jpa")
+    public AppUserService(@Qualifier("app_user_jpa")
                           AppUserDao appUserDao,
                           AppUserDTOMapper appUserDTOMapper,
                           PasswordEncoder passwordEncoder, ConfirmationTokenRepository confirmationTokenRepository, MailService mailService) {
@@ -41,7 +41,6 @@ public class AppUserService {
     public void registerUser(AppUserRegistrationRequest request, BindingResult bindingResult) {
 
         validateRegistrationRequest(request, bindingResult);
-
         if (!bindingResult.hasErrors()) {
             AppUser user = buildUser(request);
 
@@ -52,35 +51,30 @@ public class AppUserService {
         }
     }
 
-    public AppUserDTO getAppUser(String appUserId) {
-        return appUserDao.selectAppUserById(appUserId)
+    public AppUserDTO getAppUserDTO(String appUserId) {
+        return appUserDao.selectAppUserByUserId(appUserId)
                 .map(appUserDTOMapper)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id [%s] not found".formatted(appUserId)));
+                .orElseThrow(() -> new UserNotFoundException("user with id: [%s] not found".formatted(appUserId)));
     }
 
-    public AppUser getUser(String appUserId) {
-        return appUserDao.selectAppUserById(appUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id [%s] not found".formatted(appUserId)));
+    public AppUser getAppUser(String appUserId) {
+        return appUserDao.selectAppUserByUserId(appUserId)
+                .orElseThrow(() -> new UserNotFoundException("user with id: [%s] not found".formatted(appUserId)));
     }
 
-    public void updateAppUser(String appUserId, AppUserUpdateRequest updateRequest) {
-        AppUser appUser = appUserDao.selectAppUserById(appUserId)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id [%s] not found".formatted(appUserId)));
+    public void updateAppUser(AppUserUpdateRequest updateRequest) {
+        AppUser appUser = appUserDao.selectAppUserByEmail(updateRequest.email())
+                .orElseThrow(() -> new UserNotFoundException("user with email: [%s] not found".formatted(updateRequest.email())));
 
         boolean changesFlag = false;
 
-        if (updateRequest.username() != null && !updateRequest.username().equals(appUser.getUsername())) {
-            appUser.setUsername(updateRequest.username());
+        if (updateRequest.newUsername() != null && !updateRequest.newUsername().equals(appUser.getUsername())) {
+            appUser.setUsername(updateRequest.newUsername());
             changesFlag = true;
         }
 
-        if (updateRequest.email() != null && !updateRequest.email().equals(appUser.getEmail())) {
-            appUser.setEmail(updateRequest.email());
-            changesFlag = true;
-        }
-
-        if (updateRequest.password() != null && !passwordEncoder.matches(updateRequest.password(), appUser.getPassword())) {
-            appUser.setPassword(updateRequest.password());
+        if (updateRequest.newPassword() != null && !passwordEncoder.matches(updateRequest.newPassword(), appUser.getPassword())) {
+            appUser.setPassword(passwordEncoder.encode(updateRequest.newPassword()));
             changesFlag = true;
         }
 
@@ -106,8 +100,13 @@ public class AppUserService {
     }
 
     private AppUser buildUser(AppUserRegistrationRequest request) {
+        String userId;
+        do {
+            userId = UUID.randomUUID().toString();
+        } while(appUserDao.existsAppUserByUserId(userId));
+
         return AppUser.builder()
-                .id(UUID.randomUUID().toString())
+                .id(userId)
                 .username(request.username())
                 .email(request.email())
                 .password(passwordEncoder.encode(request.password()))
@@ -116,10 +115,14 @@ public class AppUserService {
     }
 
     public void deleteAppUser(String appUserId) {
-        appUserDao.deleteAppUserById(appUserId);
+
+        if(!appUserDao.existsAppUserByUserId(appUserId)) {
+            throw new UserNotFoundException("user with id: [%s] not found".formatted(appUserId));
+        }
+        appUserDao.deleteAppUserByUserId(appUserId);
     }
 
-    private void sendConfirmationEmail(AppUser user, ConfirmationToken confirmationToken) {
+    void sendConfirmationEmail(AppUser user, ConfirmationToken confirmationToken) {
         SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(user.getEmail());
         mailMessage.setSubject("Complete the registration!");
@@ -132,7 +135,7 @@ public class AppUserService {
         ConfirmationToken token = confirmationTokenRepository.findByConfirmationToken(confirmationToken);
 
         if (token != null) {
-            AppUser user = appUserDao.findUserByEmailIgnoreCase(token.getAppUser().getEmail());
+            AppUser user = appUserDao.selectAppUserByEmail(token.getUser().getEmail()).orElseThrow();
             user.setEnabled(true);
             appUserDao.insertAppUser(user);
             return ResponseEntity.ok("Email verified successfully!");

@@ -1,5 +1,8 @@
 package com.tmszw.invoicemanagerv2.appuser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.tmszw.invoicemanagerv2.company.Company;
+import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationToken;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -62,12 +65,27 @@ public class AppUser implements UserDetails {
     )
     private String password;
 
-    @OneToMany(mappedBy = "user", orphanRemoval = true, cascade = CascadeType.PERSIST)
-    Set<Company> companies = new HashSet<>();
+    @JsonIgnore
+    @OneToMany(
+            mappedBy = "user",
+            orphanRemoval = true,
+            cascade = CascadeType.PERSIST
+    )
+    Set<Company> companies;
+
+    @JsonIgnore
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private ConfirmationToken confirmationToken;
 
     @Column(
+            name = "is_enabled",
             nullable = false
     )
+
     private boolean isEnabled;
 
     @Override

@@ -1,8 +1,8 @@
 package com.tmszw.invoicemanagerv2.appuser;
 
 public record AppUserUpdateRequest(
-        String username,
+        String newUsername,
         String email,
-        String password
+        String newPassword
 ) {
 }

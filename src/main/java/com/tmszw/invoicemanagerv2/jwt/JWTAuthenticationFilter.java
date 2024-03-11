@@ -1,4 +1,5 @@
 package com.tmszw.invoicemanagerv2.jwt;
+import com.tmszw.invoicemanagerv2.appuser.AppUserUserDetailsService;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,9 +22,9 @@ public class JWTAuthenticationFilter extends OncePerRequestFilter {
 
     private final UserDetailsService userDetailsService;
 
-    public JWTAuthenticationFilter(JWTUtil jwtUtil, UserDetailsService userDetailsService) {
+    public JWTAuthenticationFilter(JWTUtil jwtUtil, AppUserUserDetailsService appUserDetailsService) {
         this.jwtUtil = jwtUtil;
-        this.userDetailsService = userDetailsService;
+        this.userDetailsService = appUserDetailsService;
     }
 
     @Override

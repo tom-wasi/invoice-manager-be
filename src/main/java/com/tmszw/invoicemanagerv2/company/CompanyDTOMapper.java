@@ -11,7 +11,6 @@ public class CompanyDTOMapper implements Function<Company, CompanyDTO> {
         return new CompanyDTO(
                 company.getCompanyId(),
                 company.getCompanyName(),
-                company.getUser(),
                 company.getAccountantEmail()
         );
     }

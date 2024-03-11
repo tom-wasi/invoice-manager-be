@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,19 +22,26 @@ public class AuthenticationService {
 
         boolean isEnabled = appUserService.getIsEnabled(request.email());
 
-        if(!isEnabled) {
+        if (!isEnabled) {
             throw new UserNotVerifiedException("Please confirm account with the link provided in e-mail message");
         }
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.email(),
-                        request.password()
-                )
-        );
-        AppUser principal = (AppUser) authentication.getPrincipal();
-        AppUserDTO appUserDTO = appUserDTOMapper.apply(principal);
-        String token = jwtUtil.issueToken(appUserDTO.id(), appUserDTO.roles());
-        return new AuthenticationResponse(token);
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.email(),
+                            request.password()
+                    )
+            );
+            AppUser principal = (AppUser) authentication.getPrincipal();
+            AppUserDTO appUserDTO = appUserDTOMapper.apply(principal);
+            String token = jwtUtil.issueToken(appUserDTO.id(), appUserDTO.roles());
+            return new AuthenticationResponse(token);
+
+        } catch (AuthenticationException e) {
+            // Log the exception message
+            System.out.println("Authentication failed: " + e.getMessage());
+            throw e;
+        }
     }
 }

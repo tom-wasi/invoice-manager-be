@@ -1,10 +1,10 @@
-package com.tmszw.invoicemanagerv2.s3;
+package com.tmszw.invoicemanagerv2;
 
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-public class TestContainersTest extends AbstractTestContainers{
+public class TestcontainersTest extends AbstractTestcontainers {
 
     @Test
     void canStartPostgresDB() {

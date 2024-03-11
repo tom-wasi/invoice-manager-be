@@ -12,7 +12,7 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
-    @Value("http://localhost:3000")
+    @Value("*")
     private List<String> allowedOrigins;
 
     @Value("*")

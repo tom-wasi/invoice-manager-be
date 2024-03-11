@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,8 +27,9 @@ public class AppUserController {
     private final AppUserService appUserService;
 
     @GetMapping("/{appUserId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public AppUserDTO getAppUser(@PathVariable("appUserId") String appUserId) {
-        return appUserService.getAppUser(appUserId);
+        return appUserService.getAppUserDTO(appUserId);
     }
 
     @ApiOperation(value = "Register a new user", notes = "Registers a new user with provided details. User has to confirm registration by clicking the link in the email message.")
@@ -49,17 +51,17 @@ public class AppUserController {
         }
 
         logger.info("User registration successful for email: {}", request.email());
-        return ResponseEntity.ok("User registered successfully. Please confirm account with the link provided in the mail message");
-
+        return ResponseEntity.ok("User registration successful!");
     }
 
     @PutMapping("/{appUserId}")
-    public ResponseEntity<?> updateUser(@PathVariable("appUserId") String appUserId, AppUserUpdateRequest appUserUpdateRequest) {
-        logger.info("Attempting to update user with id: {}", appUserId);
+    @PreAuthorize("hasRole('ROLE_USER')")
+    public ResponseEntity<?> updateUser(@RequestBody AppUserUpdateRequest appUserUpdateRequest) {
+        logger.info("Attempting to update user with email: {}", appUserUpdateRequest.email());
         try {
-            appUserService.updateAppUser(appUserId, appUserUpdateRequest);
-            logger.info("User update successfull for user with id: {}", appUserId);
-            return ResponseEntity.ok().build();
+            appUserService.updateAppUser(appUserUpdateRequest);
+            logger.info("User update successful for user with email: {}", appUserUpdateRequest.email());
+            return ResponseEntity.ok("User updated successfully!");
         } catch (Exception e) {
             logger.info("User update failed.");
             return ResponseEntity.badRequest().body(e);
@@ -67,6 +69,7 @@ public class AppUserController {
     }
 
     @DeleteMapping("/{appUserId}")
+    @PreAuthorize("hasRole('ROLE_USER')")
     public ResponseEntity<?> deleteUser(@PathVariable("appUserId") String appUserId) {
         logger.info("Deleting user with id {}", appUserId);
         appUserService.deleteAppUser(appUserId);

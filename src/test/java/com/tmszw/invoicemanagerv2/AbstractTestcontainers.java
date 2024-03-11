@@ -1,7 +1,9 @@
-package com.tmszw.invoicemanagerv2.s3;
+package com.tmszw.invoicemanagerv2;
 
 import com.github.javafaker.Faker;
 import org.flywaydb.core.Flyway;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -14,7 +16,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import javax.sql.DataSource;
 
 @Testcontainers
-public abstract class AbstractTestContainers {
+public abstract class AbstractTestcontainers {
+
+    public AbstractTestcontainers(){}
 
     @BeforeAll
     static void beforeAll() {
@@ -28,13 +32,13 @@ public abstract class AbstractTestContainers {
         flyway.migrate();
     }
 
+    @SuppressWarnings("resource")
     @Container
     protected static final PostgreSQLContainer<?> postgreSQLContainer =
-            new PostgreSQLContainer<>("postgres:latest")
-                    .withDatabaseName("invoice-manager-v2-dao-unit-test")
-                    .withUsername("invoicemanager")
-                    .withPassword("password");
-
+            new PostgreSQLContainer<>("postgres:15")
+                    .withDatabaseName("invoice-manager-test")
+                    .withUsername("postgres")
+                    .withPassword("mysecrettestpassword");
 
     @DynamicPropertySource
     private static void registerDataSourceProperties(
@@ -59,8 +63,11 @@ public abstract class AbstractTestContainers {
                 .build();
     }
 
-    protected static JdbcTemplate getJdbcTemplate() {return new JdbcTemplate(getDataSource());}
+    @Contract(" -> new")
+    protected static @NotNull JdbcTemplate getJdbcTemplate() {
+        return new JdbcTemplate(getDataSource());
+    }
 
-    protected static final Faker FAKER = new Faker();
+    public static final Faker FAKER = new Faker();
 
 }

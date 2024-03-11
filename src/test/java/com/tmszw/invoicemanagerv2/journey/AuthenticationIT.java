@@ -1,18 +1,22 @@
 package com.tmszw.invoicemanagerv2.journey;
 
-import com.github.javafaker.Faker;
-import com.github.javafaker.Name;
-import com.tmszw.invoicemanagerv2.appuser.*;
+import com.tmszw.invoicemanagerv2.TestcontainersTest;
+import com.tmszw.invoicemanagerv2.appuser.AppUser;
+import com.tmszw.invoicemanagerv2.appuser.AppUserDTO;
+import com.tmszw.invoicemanagerv2.appuser.AppUserDao;
+import com.tmszw.invoicemanagerv2.appuser.AppUserRegistrationRequest;
 import com.tmszw.invoicemanagerv2.auth.AuthenticationRequest;
 import com.tmszw.invoicemanagerv2.auth.AuthenticationResponse;
 import com.tmszw.invoicemanagerv2.jwt.JWTUtil;
 import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationToken;
 import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationTokenRepository;
-import org.apache.http.HttpHeaders;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.reactive.server.EntityExchangeResult;
@@ -21,38 +25,36 @@ import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
+import static com.tmszw.invoicemanagerv2.AbstractTestcontainers.FAKER;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestcontainersTest.class)
 public class AuthenticationIT {
 
     @Autowired
     private WebTestClient webTestClient;
 
+    @Qualifier("app_user_jdbc")
     @Autowired
-    private AppUserRepository appUserRepository;
+    private AppUserDao appUserDao;
 
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;
 
     @Autowired
     private JWTUtil jwtUtil;
-
     private static final String AUTHENTICATION_PATH = "/api/v1/auth";
-
     private static final String USER_PATH = "/api/v1/users";
 
     @Test
     void canLogin() {
         //given
         //create appUserRegistrationRequest
-        Faker faker = new Faker();
-        Name fakerName = faker.name();
 
-        String name = fakerName.fullName();
-        String email = fakerName.lastName() + "_" + UUID.randomUUID() + "@tmszw.com";
+        String name = FAKER.name().fullName();
+        String email = FAKER.internet().safeEmailAddress();
 
         String password = "password";
 
@@ -98,8 +100,8 @@ public class AuthenticationIT {
                 .expectStatus()
                 .isUnauthorized();
 
-        AppUser user = appUserRepository.findAppUserByEmail(email);
-        ConfirmationToken confirmationToken = confirmationTokenRepository.findByAppUserId(user.getId());
+        AppUser user = appUserDao.selectAppUserByEmail(email).orElseThrow();
+        ConfirmationToken confirmationToken = confirmationTokenRepository.findByUserId(user.getId());
         String token = confirmationToken.getConfirmationToken();
 
         //send a post with confirmationToken
@@ -122,9 +124,8 @@ public class AuthenticationIT {
                 })
                 .returnResult();
 
-        String jwtToken = Objects.requireNonNull(Objects.requireNonNull(result.getResponseHeaders()
-                        .get(HttpHeaders.AUTHORIZATION)))
-                .get(0);
+        String jwtToken = Objects.requireNonNull(result.getResponseHeaders()
+                .get(HttpHeaders.AUTHORIZATION)).get(0);
 
         String decodedIdFromToken = jwtUtil.getClaims(jwtToken).getSubject();
 
@@ -139,6 +140,7 @@ public class AuthenticationIT {
 
         AppUserDTO appUserDTO = fetchedUser.getResponseBody();
 
+        //then
         assertThat(jwtUtil.isTokenValid(
                 jwtToken,
                 Objects.requireNonNull(appUserDTO).id())).isTrue();

@@ -1,11 +1,10 @@
 package com.tmszw.invoicemanagerv2.invoice;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.tmszw.invoicemanagerv2.company.Company;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -14,6 +13,7 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @Getter
 @Setter
+@EqualsAndHashCode
 @Table( name = "invoice")
 public class Invoice {
 
@@ -28,11 +28,11 @@ public class Invoice {
     private String invoice_file_id;
 
     @Column(
-            name = "invoice_description",
-            nullable = true
+            name = "invoice_description"
     )
     private String description;
 
+    @JsonIgnore
     @ManyToOne
     @JoinColumn(
             name = "company_id",

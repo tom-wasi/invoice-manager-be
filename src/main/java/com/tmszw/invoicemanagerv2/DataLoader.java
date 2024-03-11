@@ -1,4 +1,4 @@
-package com.tmszw.invoicemanagerv2;
+/*package com.tmszw.invoicemanagerv2;
 
 import com.tmszw.invoicemanagerv2.appuser.AppUser;
 import com.tmszw.invoicemanagerv2.appuser.AppUserRepository;
@@ -26,7 +26,7 @@ public class DataLoader implements CommandLineRunner {
         for (int i = 1; i <= 10; i++) {
             String username = "user" + i;
             String email = "user" + i + "@example.com";
-            String password = passwordEncoder.encode("password"); // You should use a strong password encoder
+            String password = passwordEncoder.encode("password");
 
             String companyName = "company" + i;
             String accountantMail = "accountant" + i + "@gmail.com";
@@ -48,4 +48,4 @@ public class DataLoader implements CommandLineRunner {
             companyRepository.save(newCompany);
         }
     }
-}
+} */

@@ -12,7 +12,6 @@ public class InvoiceDTOMapper implements Function<Invoice, InvoiceDTO> {
                 invoice.getId(),
                 invoice.getInvoice_file_id(),
                 invoice.getDescription(),
-                invoice.getCompany().getCompanyId(),
                 invoice.isPending(),
                 invoice.getLocalDate()
         );

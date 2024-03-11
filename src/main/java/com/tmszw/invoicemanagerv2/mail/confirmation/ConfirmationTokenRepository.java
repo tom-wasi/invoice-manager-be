@@ -8,7 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface ConfirmationTokenRepository extends JpaRepository<ConfirmationToken, Long> {
 
     ConfirmationToken findByConfirmationToken(String confirmationToken);
-
-    @Query(value = "SELECT * FROM confirmation_token WHERE app_user_id =?1", nativeQuery = true)
-    ConfirmationToken findByAppUserId(String appUserId);
+    @Query(value = "SELECT * FROM confirmation_token WHERE user_id =?1", nativeQuery = true)
+    ConfirmationToken findByUserId(String id);
 }
