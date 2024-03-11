@@ -1,4 +1,8 @@
 package com.tmszw.invoicemanagerv2.appuser;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.tmszw.invoicemanagerv2.company.Company;
+import com.tmszw.invoicemanagerv2.mail.confirmation.ConfirmationToken;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,9 +12,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @Entity
 @NoArgsConstructor
@@ -25,10 +27,12 @@ import java.util.Objects;
                 )})
 public class AppUser implements UserDetails {
 
-    public AppUser(String username, String email, String password) {
+    public AppUser(String id, String username, String email, String password, boolean isEnabled) {
+        this.id = id;
         this.username = username;
         this.email = email;
         this.password = password;
+        this.isEnabled = isEnabled;
     }
 
     @Id
@@ -38,25 +42,51 @@ public class AppUser implements UserDetails {
             allocationSize = 1
     )
     @GeneratedValue(
-            strategy = GenerationType.SEQUENCE,
-            generator = "app_user_id_seq"
+            strategy = GenerationType.UUID
     )
-    private Integer id;
+    @Column(name = "user_id")
+    private String id;
 
     @Column(
+            name = "username",
             nullable = false
     )
     private String username;
 
     @Column(
+            name = "email",
             nullable = false
     )
     private String email;
 
     @Column(
+            name = "password",
             nullable = false
     )
     private String password;
+
+    @JsonIgnore
+    @OneToMany(
+            mappedBy = "user",
+            orphanRemoval = true,
+            cascade = CascadeType.PERSIST
+    )
+    Set<Company> companies;
+
+    @JsonIgnore
+    @OneToOne(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private ConfirmationToken confirmationToken;
+
+    @Column(
+            name = "is_enabled",
+            nullable = false
+    )
+
+    private boolean isEnabled;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -80,19 +110,6 @@ public class AppUser implements UserDetails {
 
     @Override
     public boolean isEnabled() {
-        return true;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        AppUser appUser = (AppUser) o;
-        return Objects.equals(id, appUser.id) && Objects.equals(username, appUser.username) && Objects.equals(email, appUser.email) && Objects.equals(password, appUser.password);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, username, email, password);
+        return isEnabled;
     }
 }

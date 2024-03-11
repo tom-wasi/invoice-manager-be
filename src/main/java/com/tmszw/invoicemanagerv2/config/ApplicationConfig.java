@@ -9,13 +9,16 @@ import javax.sql.DataSource;
 
 @Configuration
 public class ApplicationConfig {
+    String url = "jdbc:postgresql://localhost:5434/invoice-manager";
+    String username = "postgres";
+    String password = "mysecretpassword";
 
     @Bean
     public DataSource dataSource() {
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
-        dataSource.setUrl("jdbc:postgresql://localhost:5432/invoice-manager");
-        dataSource.setUsername("postgres");
-        dataSource.setPassword("mysecretpassword");
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
         return dataSource;
     }
 

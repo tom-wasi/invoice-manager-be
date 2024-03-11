@@ -4,14 +4,15 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, Integer> {
 
-    @Query(value = "SELECT * FROM company WHERE user_id = ?1", nativeQuery = true)
-    List<Company> findAllUserCompanies(Integer userId);
+    @Query(value = "SELECT * FROM company c WHERE c.user_id = ?1", nativeQuery = true)
+    List<Company> findAllUserCompanies(String userId);
 
-    @Query(value = "SELECT * FROM company WHERE id = ?1", nativeQuery = true)
-    Company findCompanyById(Integer companyId);
+    @Query(value = "SELECT * FROM company c WHERE c.company_id = ?1", nativeQuery = true)
+    Optional<Company> findCompanyById(Integer companyId);
 
 }
